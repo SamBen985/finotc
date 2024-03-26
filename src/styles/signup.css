@@ -1,0 +1,6 @@
+.sign-bg {
+  background-image: url("../assets//sign.jpeg");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
