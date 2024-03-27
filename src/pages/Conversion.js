@@ -9,6 +9,7 @@ function Conversion() {
   const [btcUsd, setBtcUsd] = useState();
   const [btcAud, setBtcAud] = useState();
   const [ethUsd, setEthUsd] = useState();
+  const [solUsd, setSolUsd] = useState();
   const [conversionRate, setConversionRate] = useState(1);
   const [convertedAmount, setConvertedAmount] = useState(null);
   const [inputAmount, setInputAmount] = useState("");
@@ -28,7 +29,8 @@ function Conversion() {
     )
       .then((response) => response.json())
       .then((data) => {
-        setEthUsd(data[1].current_price);
+        setEthUsd(data.find((coin) => coin.symbol === "eth").current_price);
+        setSolUsd(data.find((coin) => coin.symbol === "sol").current_price);
       });
   }, []);
 
@@ -53,8 +55,10 @@ function Conversion() {
       setConversionRate(selectedCurrency === "AUD" ? btcAud : btcUsd);
     } else if (selectedCrypto === "ETH") {
       setConversionRate(ethUsd);
+    } else if (selectedCrypto === "SOL") {
+      setConversionRate(solUsd); // Set conversion rate for Solana
     }
-  }, [selectedCrypto, btcUsd, btcAud, ethUsd, selectedCurrency]);
+  }, [selectedCrypto, btcUsd, btcAud, ethUsd, solUsd, selectedCurrency]);
 
   const handleCryptoSelect = (event) => {
     const selectedCryptoName = event.target.value;
@@ -80,11 +84,20 @@ function Conversion() {
 
       switch (selectedCurrency) {
         case "USD":
-          conversionRate = selectedCrypto === "Bitcoin" ? btcUsd : ethUsd;
+          conversionRate =
+            selectedCrypto === "BTC"
+              ? btcUsd
+              : selectedCrypto === "ETH"
+              ? ethUsd
+              : solUsd;
           break;
         case "AUD":
           conversionRate =
-            selectedCrypto === "Bitcoin" ? btcAud : ethUsd * (btcAud / btcUsd);
+            selectedCrypto === "BTC"
+              ? btcAud
+              : selectedCrypto === "ETH"
+              ? ethUsd * (btcAud / btcUsd)
+              : solUsd * (btcAud / btcUsd);
           break;
         default:
           conversionRate = 1; // Default to 1 if currency not recognized
@@ -96,16 +109,6 @@ function Conversion() {
       }
     }
   };
-
-  useEffect(() => {
-    if (selectedCrypto === "bitcoin") {
-      setConversionRate(selectedCurrency === "AUD" ? btcAud : btcUsd);
-    } else if (selectedCrypto === "ethereum") {
-      setConversionRate(
-        selectedCurrency === "AUD" ? (btcAud / btcUsd) * ethUsd : 0
-      );
-    }
-  }, [selectedCrypto, btcUsd, btcAud, ethUsd, selectedCurrency]);
 
   const handleInputChange = (event) => {
     const amount = event.target.value;
@@ -124,52 +127,58 @@ function Conversion() {
   }
 
   return (
-    <div className="bg-gray-300 w-full h-full flex justify-center">
-      <div className="w-[65%] h-[75%] bg-gray-300 bg-opacity-75 flex items-center pt-10 pb-10 justify-center rounded-lg relative">
-        <div className="flex  flex-col m-5">
-          <select className="h-10 mb-10" onChange={handleCryptoSelect}>
-            <option value="">Select a Crypto</option>
-            {cryptoData.map((el) => (
-              <option key={el.id} value={el.name}>
-                {el.name}
-              </option>
-            ))}
-          </select>
-          {selectedCrypto && (
-            <div>
-              <h1 className="text-white">{selectedCrypto}</h1>
-            </div>
-          )}
-        </div>
-        <div className="flex flex-col m-5">
-          <select className="h-10 mb-10" onChange={handleCurrencySelect}>
-            <option value="">Select Currency</option>
-            <option value="USD">USD</option>
-            <option value="AUD">AUD</option>
-          </select>
-          {selectedCurrency && conversionRate !== undefined && (
-            <div>
-              <h2 className="text-white">Rate: {conversionRate.toFixed(2)}</h2>
-            </div>
-          )}
-        </div>
-        <div className="flex">
-          <input
-            className="h-10 m-5"
-            type="number"
-            value={inputAmount}
-            onChange={handleInputChange}
-            placeholder="Enter amount"
-          />
-          {selectedCrypto && selectedCurrency && convertedAmount !== null && (
-            <p className="text-white text-center">
-              With {inputAmount} {selectedCurrency}, you can buy approximately (
-              {convertedAmount.toFixed(5)} {selectedCrypto})
-            </p>
-          )}
+    <>
+      <div className="bg-gray-300 w-full h-full flex justify-center">
+        <div className="w-[75%] h-[75%] bg-gray-300 bg-opacity-75 flex items-center pt-10 pb-10 justify-center rounded-lg relative">
+          <div className="flex  flex-col m-5">
+            <select className="h-10 mb-10" onChange={handleCryptoSelect}>
+              <option value="">Select a Crypto</option>
+              {cryptoData.map((el) => (
+                <option key={el.id} value={el.name}>
+                  {el.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-col m-5 top-0">
+            <select className="h-10 mb-10" onChange={handleCurrencySelect}>
+              <option value="">Select Currency</option>
+              <option value="USD">USD</option>
+              <option value="AUD">AUD</option>
+            </select>
+          </div>
+          <div className="flex">
+            <input
+              className="h-10 mb-10"
+              type="number"
+              value={inputAmount}
+              onChange={handleInputChange}
+              placeholder="Enter amount"
+            />
+          </div>
         </div>
       </div>
-    </div>
+      <div>
+        {selectedCrypto && (
+          <div>
+            <h1 className="text-black text-center">{selectedCrypto}</h1>
+          </div>
+        )}
+        {selectedCurrency && conversionRate !== undefined && (
+          <div>
+            <h2 className="text-black text-center">
+              Rate: {conversionRate.toFixed(2)}
+            </h2>
+          </div>
+        )}
+        {selectedCrypto && selectedCurrency && convertedAmount !== null && (
+          <p className="text-black text-center">
+            With {inputAmount} {selectedCurrency}, you can buy approximately (
+            {convertedAmount.toFixed(5)} {selectedCrypto})
+          </p>
+        )}
+      </div>
+    </>
   );
 }
 
