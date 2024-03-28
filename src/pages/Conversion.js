@@ -51,12 +51,17 @@ function Conversion() {
   }, []);
 
   useEffect(() => {
-    if (selectedCrypto === "BTC") {
+    if (selectedCrypto === "Bitcoin") {
+      console.log(selectedCrypto);
       setConversionRate(selectedCurrency === "AUD" ? btcAud : btcUsd);
-    } else if (selectedCrypto === "ETH") {
-      setConversionRate(ethUsd);
-    } else if (selectedCrypto === "SOL") {
-      setConversionRate(solUsd); // Set conversion rate for Solana
+    } else if (selectedCrypto === "Ethereum") {
+      setConversionRate(
+        selectedCurrency === "USD" ? ethUsd : ethUsd * (btcAud / btcUsd)
+      );
+    } else if (selectedCrypto === "Solana") {
+      setConversionRate(
+        selectedCurrency === "USD" ? solUsd : solUsd * (btcAud / btcUsd)
+      ); // Set conversion rate for Solana
     }
   }, [selectedCrypto, btcUsd, btcAud, ethUsd, solUsd, selectedCurrency]);
 
@@ -68,7 +73,7 @@ function Conversion() {
     const selectedCryptoObject = cryptoData.find(
       (crypto) => crypto.name === selectedCryptoName
     );
-    console.log(selectedCryptoObject);
+    // console.log(selectedCryptoObject);
     if (selectedCryptoObject) {
       setSelectedCryptoPrice(selectedCryptoObject.current_price);
       setConvertedAmount(null);
@@ -85,19 +90,23 @@ function Conversion() {
       switch (selectedCurrency) {
         case "USD":
           conversionRate =
-            selectedCrypto === "BTC"
+            selectedCrypto === "Bitcoin"
               ? btcUsd
-              : selectedCrypto === "ETH"
+              : selectedCrypto === "Ethereum"
               ? ethUsd
-              : solUsd;
+              : selectedCrypto === "Solana"
+              ? solUsd
+              : "";
           break;
         case "AUD":
           conversionRate =
-            selectedCrypto === "BTC"
+            selectedCrypto === "Bitcoin"
               ? btcAud
-              : selectedCrypto === "ETH"
-              ? ethUsd * (btcAud / btcUsd)
-              : solUsd * (btcAud / btcUsd);
+              : selectedCrypto === "Ethereum"
+              ? ethUsd * (btcAud / btcUsd) // Convert Ethereum to AUD
+              : selectedCrypto === "Solana"
+              ? solUsd * (btcAud / btcUsd) // Convert Solana to AUD
+              : "";
           break;
         default:
           conversionRate = 1; // Default to 1 if currency not recognized
